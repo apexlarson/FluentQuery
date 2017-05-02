@@ -1,0 +1,1 @@
+global class InvalidAliasException extends Exception { }
