@@ -7,7 +7,7 @@ class DataCategoryTests
     static testmethod void testFieldPath()
     {
         Test.startTest();
-        	String fieldPath = new DataCategory(CATEGORY).getFieldPath();
+            String fieldPath = new DataCategory(CATEGORY).getFieldPath();
         Test.stopTest();
         
         system.assertEquals(null, fieldPath,

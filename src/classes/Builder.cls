@@ -97,38 +97,6 @@ global virtual class Builder
     global Builder updateTracking() { this.updateTracking = true; return this; }
     global Builder updateViewStat() { this.updateViewStat = true; return this; }
     
-    global Builder respectPermissions()
-    {
-        if (!Permissions.isAccessible(sObjectType))
-        {
-            NoAccessException e = new NoAccessException();
-            e.setMessage(String.valueOf(sObjectType));
-            throw e;
-        }
-            
-        Integer i;
-        if (!fields.isEmpty())
-            for (i = fields.size() - 1; i >= 0; i--)
-                if (!Permissions.isAccessible(sObjectType, fields[i])) fields.remove(i);
-        if (!groupings.isEmpty())
-            for (i = groupings.size() - 1; i >= 0; i--)
-                if (!Permissions.isAccessible(sObjectType, groupings[i])) groupings.remove(i);
-        if (!rollupGroupings.isEmpty())
-            for (i = rollupGroupings.size() - 1; i >= 0; i--)
-                if (!Permissions.isAccessible(sObjectType, rollupGroupings[i])) rollupGroupings.remove(i);
-        if (!cubeGroupings.isEmpty())
-            for (i = cubeGroupings.size() - 1; i >= 0; i--)
-                if (!Permissions.isAccessible(sObjectType, cubeGroupings[i])) cubeGroupings.remove(i);
-        if (!orderings.isEmpty())
-            for (i = orderings.size() - 1; i >= 0; i--)
-                if (!Permissions.isAccessible(sObjectType, orderings[i])) orderings.remove(i);
-        if (wherePredicate != null)
-            wherePredicate = wherePredicate.respectPermissions(sObjectType);
-        if (havingPredicate != null)
-            havingPredicate = havingPredicate.respectPermissions(sObjectType);
-        return this;
-    }
-    
     global List<SObject> getRecords()
     {
         return Database.query(top().toString());
@@ -151,6 +119,40 @@ global virtual class Builder
             getHavingClause(), getOrderByClause(), getLimitClause(),
             getOffsetClause(), getForClauses(), getUpdateClauses()
         });
+    }
+    virtual void enforceObjectAccess()
+    {
+        if (!Permissions.isAccessible(sObjectType))
+        {
+            NoAccessException e = new NoAccessException();
+            e.setMessage(String.valueOf(sObjectType));
+            throw e;
+        }
+    }
+    void respectPermissions()
+    {
+        enforceObjectAccess();
+        
+        Integer i;
+        if (!fields.isEmpty())
+            for (i = fields.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, fields[i])) fields.remove(i);
+        if (!groupings.isEmpty())
+            for (i = groupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, groupings[i])) groupings.remove(i);
+        if (!rollupGroupings.isEmpty())
+            for (i = rollupGroupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, rollupGroupings[i])) rollupGroupings.remove(i);
+        if (!cubeGroupings.isEmpty())
+            for (i = cubeGroupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, cubeGroupings[i])) cubeGroupings.remove(i);
+        if (!orderings.isEmpty())
+            for (i = orderings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, orderings[i])) orderings.remove(i);
+        if (wherePredicate != null)
+            wherePredicate = wherePredicate.respectPermissions(sObjectType);
+        if (havingPredicate != null)
+            havingPredicate = havingPredicate.respectPermissions(sObjectType);
     }
     virtual String getTableName()
     {
@@ -259,5 +261,9 @@ global virtual class Builder
         }
         public override Builder top() { return parent.selectX(new FieldExpression(this)); }
         override String getTableName() { return relationshipName; }
+        override void enforceObjectAccess()
+        {
+            // FieldExpression will be stripped out as needed
+        }
     }
 }

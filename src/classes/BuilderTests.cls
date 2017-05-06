@@ -401,7 +401,7 @@ class BuilderTests
     {
         NoAccessException expectedException;
         Test.startTest();
-        	Permissions.setMock(new PermissionsMock.None());
+            Permissions.setMock(new PermissionsMock.None());
             try { new Builder(User.sObjectType).toString(); }
             catch (NoAccessException e) { expectedException = e; }
         Test.stopTest();
@@ -414,7 +414,7 @@ class BuilderTests
         SObjectException expectedException;
         Test.startTest();
             PermissionsMock.whiteList(User.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             try
             {
                 User record = (User)new Builder(User.sObjectType)
@@ -427,12 +427,28 @@ class BuilderTests
         system.assertNotEquals(null, expectedException,
             'Query should not select a field which is not accessible');
     }
+    static testmethod void testRespectPermissions_ChildQuery()
+    {
+        SObjectException expectedException;
+        Test.startTest();
+            PermissionsMock.whitelist('Id');
+            PermissionsMock.whiteList(Profile.sObjectType);
+            Permissions.setMock(new PermissionsMock());
+            Profile record = (Profile)new Builder(Profile.sObjectType)
+                .queryChildren('Users').top()
+                .whereX(new Filter(Profile.Id).equals(UserInfo.getProfileId()))
+                .getRecord();
+        Test.stopTest();
+        
+        system.assert(record.Users.isEmpty(),
+            'Query should not select a child object which is not accessible');
+    }
     static testmethod void testRespectPermissions_WhereClause()
     {
         SObjectException expectedException;
         Test.startTest();
             PermissionsMock.whiteList(User.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             List<User> records = new Builder(User.sObjectType)
                 .whereX(new Filter(User.Email).equals(null))
                 .getRecords();
@@ -446,7 +462,7 @@ class BuilderTests
         Test.startTest();
             PermissionsMock.whitelist('Id');
             PermissionsMock.whiteList(Profile.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             List<SObject> records = new Builder(Profile.sObjectType)
                 .selectX(FieldExpression.count(Profile.Id))
                 .groupBy(Profile.Name).getRecords();
@@ -461,7 +477,7 @@ class BuilderTests
         Test.startTest();
             PermissionsMock.whitelist('Id');
             PermissionsMock.whiteList(Profile.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             List<SObject> records = new Builder(Profile.sObjectType)
                 .selectX(FieldExpression.count(Profile.Id))
                 .groupByRollup(Profile.Name).getRecords();
@@ -475,7 +491,7 @@ class BuilderTests
         Test.startTest();
             PermissionsMock.whitelist('Id');
             PermissionsMock.whiteList(Profile.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             List<SObject> records = new Builder(Profile.sObjectType)
                 .selectX(FieldExpression.count(Profile.Id))
                 .groupByCube(Profile.Name).getRecords();
@@ -490,7 +506,7 @@ class BuilderTests
         Test.startTest();
             PermissionsMock.whitelist('Email');
             PermissionsMock.whiteList(User.sObjectType);
-        	Permissions.setMock(new PermissionsMock());
+            Permissions.setMock(new PermissionsMock());
             List<SObject> records = new Builder(User.sObjectType)
                 .selectX('Email').groupBy('Email').groupBy('Username')
                 .havingX(new Filter('Username').equals(null))

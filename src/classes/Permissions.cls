@@ -1,5 +1,5 @@
 public virtual class Permissions
-{    
+{
     static Permissions runningUser = new Permissions();
     @TestVisible static void setMock(Permissions mock) { runningUser = mock; }
     
@@ -50,6 +50,6 @@ public virtual class Permissions
     {
         if (expression == null) return false;
         return (expression instanceOf DataCategory) ? true :
-        	canAccess(sObjectType, expression.getFieldPath());
+            canAccess(sObjectType, expression.getFieldPath());
     }
 }

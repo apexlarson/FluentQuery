@@ -11,7 +11,7 @@ class PermissionsTests
     static testmethod void testIsAccessible_SObjectType()
     {
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE);
         Test.stopTest();
         
         system.assertEquals(IS_OBJECT_ACCESSIBLE, isAccessible,
@@ -21,7 +21,7 @@ class PermissionsTests
     static testmethod void testIsAccessible_FieldPath()
     {
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, FIELD_PATH);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, FIELD_PATH);
         Test.stopTest();
         
         system.assertEquals(IS_FIELD_ACCESSIBLE, isAccessible,
@@ -33,7 +33,7 @@ class PermissionsTests
         FieldExpression expression;
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(false, isAccessible,
@@ -44,7 +44,7 @@ class PermissionsTests
         FieldExpression expression = FieldExpression.count();
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(true, isAccessible,
@@ -55,7 +55,7 @@ class PermissionsTests
         FieldExpression expression = new FieldExpression(FIELD_PATH);
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(IS_FIELD_ACCESSIBLE, isAccessible,
@@ -66,7 +66,7 @@ class PermissionsTests
         FieldExpression expression = FieldExpression.max(FIELD);
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(IS_FIELD_ACCESSIBLE, isAccessible,
@@ -77,7 +77,7 @@ class PermissionsTests
         FieldExpression expression = new FieldExpression(new Builder(SOBJECT_TYPE));
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(IS_OBJECT_ACCESSIBLE, isAccessible,
@@ -89,7 +89,7 @@ class PermissionsTests
         FieldOrder ordering;
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, ordering);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, ordering);
         Test.stopTest();
         
         system.assertEquals(false, isAccessible,
@@ -100,7 +100,7 @@ class PermissionsTests
         FieldOrder ordering = new FieldOrder(FIELD).descending().nullsLast();
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, ordering);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, ordering);
         Test.stopTest();
         
         system.assertEquals(IS_FIELD_ACCESSIBLE, isAccessible,
@@ -112,7 +112,7 @@ class PermissionsTests
         Predicate.Expression expression;
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(false, isAccessible,
@@ -123,7 +123,7 @@ class PermissionsTests
         Predicate.Expression expression = new DataCategory('SomeCategoryGroup__c');
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(true, isAccessible,
@@ -134,7 +134,7 @@ class PermissionsTests
         Predicate.Expression expression = new Filter(FIELD).doesNotEqual(null);
         
         Test.startTest();
-        	Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
+            Boolean isAccessible = Permissions.isAccessible(SOBJECT_TYPE, expression);
         Test.stopTest();
         
         system.assertEquals(true, isAccessible,
