@@ -26,7 +26,7 @@ global virtual class FieldExpression
         expression = fieldPath = field;
     }
     
-    FieldExpression(String field, Function function) 
+    FieldExpression(String field, Function function)
     {
         this(field);
         this.function = function;
@@ -45,8 +45,9 @@ global virtual class FieldExpression
     global override String toString()
     {
         if (sObjectType != null) return '(' + expression + ')';
+        if (expression == null) return String.valueOf(function) + '()';
         String output = (function == null) ? expression :
-        	String.valueOf(function) + '(' + expression + ')';
+            String.valueOf(function) + '(' + expression + ')';
         return applyAlias(output);
     }
     String applyAlias(String input)
@@ -239,7 +240,7 @@ global virtual class FieldExpression
         return new FieldExpression(field, Function.AVG);
     }
     
-    global static FieldExpression count() { return count(''); }
+    global static FieldExpression count() { return count((String)null); }
     global static FieldExpression count(String field)
     {
         return new FieldExpression(field, Function.COUNT);

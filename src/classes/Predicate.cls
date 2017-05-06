@@ -1,6 +1,6 @@
 public virtual class Predicate
 {
-    public interface Expression { String toString(); }
+    public interface Expression { String toString(); String getFieldPath(); }
     
     final Expression expression;
     final List<Predicate> children;
@@ -14,13 +14,24 @@ public virtual class Predicate
         if (!sharesType(right)) children.add(right);
         else children.addAll(right.children);
     }
-    public virtual override String toString()
+    public override String toString()
     {
         if (children == null) return expression.toString();
         List<String> clauses = new List<String>();
         for (Predicate child : children)
             clauses.add(incorporate(child));
         return String.join(clauses, getDelimiter());
+    }
+    public Predicate respectPermissions(SObjectType sObjectType)
+    {
+        if (children != null)
+        {
+            for (Integer i = children.size() - 1; i >= 0; i--)
+                if (null == children[i].respectPermissions(sObjectType))
+                    children.remove(i);
+            return !children.isEmpty() ? this : null;
+        }
+        return Permissions.isAccessible(sObjectType, expression) ? this : null;
     }
     
     @TestVisible virtual String getDelimiter() { return null; }

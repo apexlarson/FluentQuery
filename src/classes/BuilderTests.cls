@@ -6,6 +6,7 @@ class BuilderTests
     static testmethod void testCountQuery()
     {
         Test.startTest();
+            Permissions.setMock(new PermissionsMock.All());
             Integer count = new Builder(Organization.sObjectType).count();
         Test.stopTest();
         
@@ -14,6 +15,7 @@ class BuilderTests
     static testmethod void testGetRecord()
     {
         Test.startTest();
+            Permissions.setMock(new PermissionsMock.All());
             User runningUser = (User)new Builder(User.sObjectType)
                 .selectX(User.Username).whereX(
                     new Filter(User.Id).equals(UserInfo.getUserId())
@@ -26,6 +28,7 @@ class BuilderTests
     static testmethod void testGetRecords()
     {
         Test.startTest();
+            Permissions.setMock(new PermissionsMock.All());
             List<Profile> assignedProfiles = new Builder(Profile.sObjectType)
                 .whereX(new Filter('Id').isIn(new Builder(User.sObjectType).selectX('ProfileId')))
                 .getRecords();
@@ -41,6 +44,7 @@ class BuilderTests
         List<SObjectField> fields = new List<SObjectField> { User.Name };
         
         Test.startTest();
+            Permissions.setMock(new PermissionsMock.All());
             List<SObject> records = new Builder(User.sObjectType)
                 .selectX(fields).getRecords();
         Test.stopTest();
@@ -391,5 +395,135 @@ class BuilderTests
         Set<Id> userIds = new Map<Id, User>(runningUserProfile.Users).keySet();
         system.assert(userIds.contains(UserInfo.getUserId()),
             'The running user should be assigned to this Profile');
+    }
+    
+    static testmethod void testRespectPermissions_SObjectType()
+    {
+        NoAccessException expectedException;
+        Test.startTest();
+        	Permissions.setMock(new PermissionsMock.None());
+            try { new Builder(User.sObjectType).toString(); }
+            catch (NoAccessException e) { expectedException = e; }
+        Test.stopTest();
+        
+        system.assertNotEquals(null, expectedException,
+            'Query generation should fail against an object which is not accessible');
+    }
+    static testmethod void testRespectPermissions_SelectedField()
+    {
+        SObjectException expectedException;
+        Test.startTest();
+            PermissionsMock.whiteList(User.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            try
+            {
+                User record = (User)new Builder(User.sObjectType)
+                    .selectX(User.Name).limitX(1).getRecord();
+                String name = record.Name;
+            }
+            catch (SObjectException e) { expectedException = e; }
+        Test.stopTest();
+        
+        system.assertNotEquals(null, expectedException,
+            'Query should not select a field which is not accessible');
+    }
+    static testmethod void testRespectPermissions_WhereClause()
+    {
+        SObjectException expectedException;
+        Test.startTest();
+            PermissionsMock.whiteList(User.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            List<User> records = new Builder(User.sObjectType)
+                .whereX(new Filter(User.Email).equals(null))
+                .getRecords();
+        Test.stopTest();
+        
+        system.assert(!records.isEmpty(),
+            'Query should not filter on a field which is not accessible');
+    }
+    static testmethod void testRespectPermissions_GroupBy()
+    {
+        Test.startTest();
+            PermissionsMock.whitelist('Id');
+            PermissionsMock.whiteList(Profile.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            List<SObject> records = new Builder(Profile.sObjectType)
+                .selectX(FieldExpression.count(Profile.Id))
+                .groupBy(Profile.Name).getRecords();
+        
+        Test.stopTest();
+        
+        system.assertEquals(1, records.size(),
+            'Query should not group by a field which is not accessible');
+    }
+    static testmethod void testRespectPermissions_GroupByRollup()
+    {
+        Test.startTest();
+            PermissionsMock.whitelist('Id');
+            PermissionsMock.whiteList(Profile.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            List<SObject> records = new Builder(Profile.sObjectType)
+                .selectX(FieldExpression.count(Profile.Id))
+                .groupByRollup(Profile.Name).getRecords();
+        Test.stopTest();
+        
+        system.assertEquals(1, records.size(),
+            'Query should not group by a field which is not accessible');
+    }
+    static testmethod void testRespectPermissions_GroupByCube()
+    {
+        Test.startTest();
+            PermissionsMock.whitelist('Id');
+            PermissionsMock.whiteList(Profile.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            List<SObject> records = new Builder(Profile.sObjectType)
+                .selectX(FieldExpression.count(Profile.Id))
+                .groupByCube(Profile.Name).getRecords();
+        Test.stopTest();
+        
+        system.assertEquals(1, records.size(),
+            'Query should not group by a field which is not accessible');
+    }
+    
+    static testmethod void testRespectPermissions_HavingClause()
+    {
+        Test.startTest();
+            PermissionsMock.whitelist('Email');
+            PermissionsMock.whiteList(User.sObjectType);
+        	Permissions.setMock(new PermissionsMock());
+            List<SObject> records = new Builder(User.sObjectType)
+                .selectX('Email').groupBy('Email').groupBy('Username')
+                .havingX(new Filter('Username').equals(null))
+                .getRecords();
+        Test.stopTest();
+        
+        system.assert(!records.isEmpty(),
+            'Query should not filter on a field which is not accessible');
+    }
+    
+    static testmethod void testRespectPermissions_OrderBy()
+    {
+        Test.startTest();
+            PermissionsMock.whitelist('Type');
+            PermissionsMock.whitelist('StartDate');
+            PermissionsMock.whiteList(Period.sObjectType);
+            Permissions.setMock(new PermissionsMock());
+            List<Period> periods = new Builder(Period.sObjectType)
+                .selectX(Period.StartDate)
+                .whereX(new Filter(Period.Type).equals('Month'))
+                .orderBy(new FieldOrder(Period.EndDate).ascending())
+                .orderBy(new FieldOrder(Period.StartDate).descending())
+                .getRecords();
+        Test.stopTest();
+        
+        system.assert(!periods.isEmpty(), 'There should be period records');
+        Date pointer = periods[0].StartDate;
+        for (Integer i = 1; i < periods.size(); i++)
+        {
+            system.assert(periods[i].StartDate < pointer,
+                'The records should only be ordered by accessible fields - (' +
+                pointer + ',' + periods[i].StartDate + ')');
+            pointer = periods[i].StartDate;
+        }
     }
 }

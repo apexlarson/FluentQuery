@@ -14,6 +14,7 @@ global class DataCategory implements Predicate.Expression
             ' ' + String.valueOf(filteringSelector) +
             ' ' + dataCategoryName;
     }
+    public String getFieldPath() { return null; }
     
     global DataCategory at(String category)
     {

@@ -1,8 +1,6 @@
 @IsTest
 class PredicateTests
 {
-    static final String DELIMITER = ' ||| ';
-    
     static Integer clauseNumber = 1;
     class Expression implements Predicate.Expression
     {
@@ -10,6 +8,7 @@ class PredicateTests
         {
             return String.valueOf(clauseNumber++);
         }
+        public String getFieldPath() { return null; }
     }
     
     static testmethod void smokeTestVirtualProperties()
@@ -130,5 +129,31 @@ class PredicateTests
         
         system.assertEquals('1 AND 2 AND 3 AND 4', clause,
             'The clause should contain the expressions joined appropriately');
+    }
+    
+    static testmethod void testRespectPermissions_SingleExpression()
+    {
+        Filter filter = new Filter('Id').doesNotEqual(null);
+        
+        Test.startTest();
+            Permissions.setMock(new PermissionsMock.None());
+            Predicate predicate = new Predicate(filter).respectPermissions(User.sObjectType);
+        Test.stopTest();
+        
+        system.assertEquals(null, predicate,
+            'Each expression should be removed if it expresses a field path which is not accessible');
+    }
+    static testmethod void testRespectPermissions_Composition()
+    {
+        Filter a = new Filter('CreatedDate').isGreaterThan(DateLiteral.today());
+        Filter b = new Filter('CreatedDate').isLessThan(DateLiteral.today());
+        
+        Test.startTest();
+            Permissions.setMock(new PermissionsMock.None());
+            Predicate predicate = new Predicate(a).orX(b).respectPermissions(User.sObjectType);
+        Test.stopTest();
+        
+        system.assertEquals(null, predicate,
+            'Each expression should be removed if it expresses a field path which is not accessible');
     }
 }

@@ -97,6 +97,38 @@ global virtual class Builder
     global Builder updateTracking() { this.updateTracking = true; return this; }
     global Builder updateViewStat() { this.updateViewStat = true; return this; }
     
+    global Builder respectPermissions()
+    {
+        if (!Permissions.isAccessible(sObjectType))
+        {
+            NoAccessException e = new NoAccessException();
+            e.setMessage(String.valueOf(sObjectType));
+            throw e;
+        }
+            
+        Integer i;
+        if (!fields.isEmpty())
+            for (i = fields.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, fields[i])) fields.remove(i);
+        if (!groupings.isEmpty())
+            for (i = groupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, groupings[i])) groupings.remove(i);
+        if (!rollupGroupings.isEmpty())
+            for (i = rollupGroupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, rollupGroupings[i])) rollupGroupings.remove(i);
+        if (!cubeGroupings.isEmpty())
+            for (i = cubeGroupings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, cubeGroupings[i])) cubeGroupings.remove(i);
+        if (!orderings.isEmpty())
+            for (i = orderings.size() - 1; i >= 0; i--)
+                if (!Permissions.isAccessible(sObjectType, orderings[i])) orderings.remove(i);
+        if (wherePredicate != null)
+            wherePredicate = wherePredicate.respectPermissions(sObjectType);
+        if (havingPredicate != null)
+            havingPredicate = havingPredicate.respectPermissions(sObjectType);
+        return this;
+    }
+    
     global List<SObject> getRecords()
     {
         return Database.query(top().toString());
@@ -112,6 +144,7 @@ global virtual class Builder
     }
     global override String toString()
     {
+        respectPermissions();
         return String.format('SELECT {0} FROM {1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}', new List<String> {
             getSelectClause(), getTableName(), getScopeClause(),
             getWhereClause(), getWithClause(), getGroupByClause(),
@@ -205,8 +238,8 @@ global virtual class Builder
         return clauses.isEmpty() ? '' : ' UPDATE ' + String.join(clauses, ',');
     }
     
-    public virtual Builder top() { return this; }
-    public virtual Builder queryChildren(String relationshipName)
+    global virtual Builder top() { return this; }
+    global virtual Builder queryChildren(String relationshipName)
     {
         ChildRelationship relation = DescribeCache.getChildRelationship(sObjectType, relationshipName);
         if (relation == null) throw new InvalidRelationshipException(relationshipName);

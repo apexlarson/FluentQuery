@@ -30,4 +30,5 @@ global class Filter implements Predicate.Expression
     {
         return field.toString() + operator + ValueFormatter.format(value);
     }
+    public String getFieldPath() { return field.fieldPath; }
 }

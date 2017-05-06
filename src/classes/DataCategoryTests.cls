@@ -4,6 +4,15 @@ class DataCategoryTests
     static final String CATEGORY = 'Some_Category__c';
     static final String VALUE = 'Some_Value__c';
     
+    static testmethod void testFieldPath()
+    {
+        Test.startTest();
+        	String fieldPath = new DataCategory(CATEGORY).getFieldPath();
+        Test.stopTest();
+        
+        system.assertEquals(null, fieldPath,
+            'A Data Category should not have a field path');
+    }
     static testmethod void testAt()
     {
         Test.startTest();

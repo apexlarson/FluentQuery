@@ -1,6 +1,6 @@
 global class FieldOrder
 {
-    final FieldExpression field;
+    public final FieldExpression field;
     String sortOrder, nullOrder;
     
     global FieldOrder(SObjectField field) { this(String.valueOf(field)); }
